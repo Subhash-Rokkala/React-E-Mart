@@ -87,5 +87,16 @@ pipeline {
             sh 'docker run -d -p 8086:80 --name e-mart-container e-mart'
        }
     }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                    kubectl apply -f k8s/Deployment.yml
+                    kubectl apply -f k8s/loadBalancerService.yml
+                    '''
+                }
+            }
+        }
     }
 }
