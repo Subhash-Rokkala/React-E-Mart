@@ -99,14 +99,12 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+       stage('Deploy to Kubernetes') {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
-                    kubectl set image deployment/e-mart-deployment \
-                    e-mart-container=$DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG
-
-                    kubectl rollout status deployment/e-mart-deployment
+                    kubectl apply -f k8s/Deployment.yml
+                    kubectl apply -f k8s/loadBalancerService.yml
                     '''
                 }
             }
