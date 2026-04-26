@@ -67,6 +67,22 @@ pipeline {
             }
         }
 
+        stage('Docker Push') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'DockerCred',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker push subhashrokkala/hotstar:${BUILD_NUMBER}
+                    docker push subhashrokkala/hotstar:latest
+                    docker logout
+                    '''
+                }
+            }
+        }
         stage('Docker Run') {
         steps {
             sh 'docker stop e-mart-container || true'
