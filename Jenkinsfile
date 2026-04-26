@@ -49,7 +49,7 @@ pipeline {
 
         stage('JENKINS TO NEXUS') {
             steps {
-              withMaven(globalMavenSettingsConfig: 'settings.xml', jdk: 'jkd17', traceability: true) {
+              withMaven(globalMavenSettingsConfig: 'settings.xml', jdk: 'jdk17', traceability: true) {
              sh 'mvn deploy'
              }
             }
