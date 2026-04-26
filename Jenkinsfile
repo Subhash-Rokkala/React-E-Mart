@@ -7,9 +7,7 @@ pipeline {
     environment {
     SONARQUBE_ENV = 'sq'
     }
-    withMaven {
-    jdk: 'jdk17' 
-   }
+
 
     stages {
 
