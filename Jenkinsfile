@@ -10,6 +10,7 @@ pipeline {
         NEXUS_URL = 'http://3.86.224.143:8081'
         NEXUS_REPO = 'react-artifacts'
         DOCKER_IMAGE = 'e-mart'
+        DOCKER_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -18,7 +19,6 @@ pipeline {
             steps {
                 checkout scmGit(
                     branches: [[name: '*/main']],
-                    extensions: [],
                     userRemoteConfigs: [[
                         credentialsId: 'GitCreds',
                         url: 'https://github.com/Subhash-Rokkala/React-E-Mart.git'
@@ -27,15 +27,12 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install & Build') {
             steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Build Project') {
-            steps {
-                sh 'CI=false npm run build'
+                sh '''
+                npm install
+                CI=false npm run build
+                '''
             }
         }
 
@@ -67,13 +64,11 @@ pipeline {
                     passwordVariable: 'PASS'
                 )]) {
                     sh '''
-                    npm install
-                    CI=false npm run build
                     zip -r dist.zip dist/
 
                     curl -u $USER:$PASS \
                     --upload-file dist.zip \
-                    $NEXUS_URL/repository/$NEXUS_REPO/dist.zip
+                    $NEXUS_URL/repository/$NEXUS_REPO/dist-${BUILD_NUMBER}.zip
                     '''
                 }
             }
@@ -81,7 +76,9 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t $DOCKER_IMAGE ."
+                sh '''
+                docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+                '''
             }
         }
 
@@ -95,20 +92,10 @@ pipeline {
                     sh '''
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
 
-                    docker tag e-mart $DOCKER_USER/e-mart:latest
-                    docker push $DOCKER_USER/e-mart:latest
+                    docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG
+                    docker push $DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG
                     '''
                 }
-            }
-        }
-
-        stage('Docker Run') {
-            steps {
-                sh '''
-                docker stop e-mart-container || true
-                docker rm e-mart-container || true
-                docker run -d -p 8086:80 --name e-mart-container e-mart
-                '''
             }
         }
 
@@ -116,11 +103,19 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
-                    kubectl apply -f k8s/Deployment.yml
-                    kubectl apply -f k8s/loadBalancerService.yml
+                    kubectl set image deployment/e-mart-deployment \
+                    e-mart-container=$DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG
+
+                    kubectl rollout status deployment/e-mart-deployment
                     '''
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
