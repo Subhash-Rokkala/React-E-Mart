@@ -47,13 +47,19 @@ pipeline {
         }
        }
 
-        stage('JENKINS TO NEXUS') {
-            steps {
-              withMaven(globalMavenSettingsConfig: 'settings.xml', jdk: 'jdk17', traceability: true) {
-             sh 'mvn deploy'
-             }
-            }
-        }      
+        stage('Upload Artifact to Nexus') {
+    steps {
+        sh '''
+        npm install
+        CI=false npm run build
+        zip -r dist.zip dist/
+
+        curl -u admin:admin123 \
+        --upload-file dist.zip \
+        http://3.86.224.143:8081/repository/react-artifacts/dist.zip
+        '''
+    }
+}      
 
         stage('Docker Build') {
             steps {
