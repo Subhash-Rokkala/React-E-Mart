@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         SONARQUBE_ENV = 'sq'
-        NEXUS_URL = 'http://3.86.224.143:8081'
+        NEXUS_URL = 'http://18.212.60.141:8081'
         NEXUS_REPO = 'react-artifacts'
         DOCKER_IMAGE = 'e-mart'
         DOCKER_TAG = "${BUILD_NUMBER}"
