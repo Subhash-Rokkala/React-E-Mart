@@ -12,7 +12,7 @@ pipeline {
         DOCKER_IMAGE = 'e-mart'
         DOCKER_TAG = "${BUILD_NUMBER}"
         AWS_REGION = 'ap-south-1'
-        CLUSTER_NAME = 'your-cluster'
+        CLUSTER_NAME = 'mycluster'
     }
 
     stages {
