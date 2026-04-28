@@ -11,7 +11,7 @@ pipeline {
         NEXUS_REPO = 'react-artifacts'
         DOCKER_IMAGE = 'e-mart'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        AWS_REGION = 'ap-south-1'
+        AWS_REGION = 'us-east-1'
         CLUSTER_NAME = 'mycluster'
     }
 
