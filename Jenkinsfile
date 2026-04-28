@@ -7,10 +7,12 @@ pipeline {
 
     environment {
         SONARQUBE_ENV = 'sq'
-        NEXUS_URL = 'http://18.212.60.141:8081'
+        NEXUS_URL = 'http://3.89.218.67:8081'
         NEXUS_REPO = 'react-artifacts'
         DOCKER_IMAGE = 'e-mart'
         DOCKER_TAG = "${BUILD_NUMBER}"
+        AWS_REGION = 'ap-south-1'
+        CLUSTER_NAME = 'your-cluster'
     }
 
     stages {
@@ -99,14 +101,24 @@ pipeline {
             }
         }
 
-       stage('Deploy to Kubernetes') {
+      
+        stage('Update kubeconfig') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh '''
-                    kubectl apply -f k8s/Deployment.yml
-                    kubectl apply -f k8s/loadBalancerService.yml
-                    '''
-                }
+                sh '''
+                aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+                '''
+            }
+        }
+
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                kubectl config current-context
+                kubectl get nodes
+                kubectl apply -f k8s/Deployment.yml
+                kubectl apply -f k8s/loadBalancerService.yml
+                '''
             }
         }
     }
